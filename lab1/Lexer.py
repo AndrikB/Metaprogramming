@@ -6,6 +6,7 @@ def tokenize_file(file_name):
 class TokenType:
     whitespace, \
     comment, \
+    annotation, \
     keyword, \
     separator, \
     operator, \
@@ -39,6 +40,13 @@ class Token:
 
 
 class Lexer:
+    keywords = ("abstract", "assert",
+                "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue",
+                "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for",
+                "if", "goto", "implements", "import", "instanceof", "int", "interface", "long",
+                "native", "new", "package", "private", "protected", "public", "return",
+                "short", "static", "strictfp", "super", "switch", "synchronized",
+                "this", "throw", "throws", "transient", "try", "void", "volatile", "while")
 
     def __init__(self, text):
         self.text = text
@@ -47,10 +55,8 @@ class Lexer:
         self.curr_line = 1
         self.curr_pos_in_line = 1  # start of token
         self.i = 0
+        self.j = 0  # end of curr token
         self.tokens = []
-
-    def new_line(self):
-        pass
 
     def add_token(self, token_type, value):
         self.tokens.append(Token(token_type, value, Position(self.curr_line, self.curr_pos_in_line)))
@@ -63,19 +69,45 @@ class Lexer:
                 self.add_space(c)
                 continue
 
-            c_next = None
             start_symbols = c
 
             if self.i + 1 < self.len:
-                c_next = self.text[self.i + 1]
-                start_symbols = c + c_next
+                start_symbols = c + self.text[self.i + 1]
 
+            # comments
             if start_symbols == "//":
                 self.add_single_line_comment()
+                continue
             elif start_symbols == "/*":
                 self.add_multi_line_comment()
+                continue
+
+            if c in ('\'', '"'):
+                token_type = TokenType.char_literal
+                self.read_string(c)
+
+            elif c.isdigit():
+                token_type = TokenType.number_literal
+                self.read_num_or_ident()
+
+            elif c.isalpha() or c == '_':
+                token_type = TokenType.identifer
+                self.read_num_or_ident()
+                if self.text[self.i: self.j] in self.keywords:
+                    token_type = TokenType.keyword
+
+            elif c == '@':
+                token_type = TokenType.annotation
+                self.read_num_or_ident()
+
             else:
+                print(f'error in {self.i}, symbol: {self.text[self.i]}')
                 self.i += 1
+                continue
+
+            self.add_token(token_type, self.text[self.i: self.j])
+            self.curr_pos_in_line += self.j - self.i
+            self.i = self.j
 
         return self.tokens
 
@@ -120,3 +152,24 @@ class Lexer:
             self.curr_pos_in_line = i - start_of_line
 
         self.i = i
+
+    def read_string(self, esc_symbol):
+        self.j = self.i + 1
+        while self.j < self.len:
+            if self.text[self.j] == esc_symbol:
+                self.j += 1
+                return
+            if self.text[self.j] == '\\':
+                self.j += 1
+            self.j += 1
+
+    def read_num_or_ident(self):
+        self.j = self.i + 1
+
+        def is_part_of_ident(c):
+            return c.isdigit() or c.isalpha() or c == '_'
+
+        while self.j < self.len:
+            if not is_part_of_ident(self.text[self.j]):
+                return
+            self.j += 1

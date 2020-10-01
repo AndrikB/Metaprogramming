@@ -10,10 +10,9 @@ class TokenType:
     keyword, \
     separator, \
     operator, \
-    identifer, \
+    identifier, \
     number_literal, \
     string_literal, \
-    char_literal, \
     error, \
     *_ = range(20)
 
@@ -90,7 +89,7 @@ class Lexer:
                 continue
 
             if c in ('\'', '"'):
-                token_type = TokenType.char_literal
+                token_type = TokenType.string_literal
                 self.read_string(c)
 
             elif c.isdigit():
@@ -98,7 +97,7 @@ class Lexer:
                 self.read_num_or_ident()
 
             elif c.isalpha() or c == '_':
-                token_type = TokenType.identifer
+                token_type = TokenType.identifier
                 self.read_num_or_ident()
                 if self.text[self.i: self.j] in self.keywords:
                     token_type = TokenType.keyword

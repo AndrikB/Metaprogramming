@@ -31,9 +31,16 @@ class Token:
         self.position = position
 
     def __repr__(self):
+
         if self.token_type == TokenType.whitespace:
-            return f'{self.token_type}: {ord(self.value)}'
-        return f'{self.token_type}, {self.value}'
+            string = f'{self.token_type}: {ord(self.value)}'
+        else:
+            string = f'{self.token_type}, {self.value}'
+
+        if self.position is not None:
+            string += f'\tposition: {self.position.row}:{self.position.column}'
+
+        return string
 
     def __str__(self):
         return repr(self)
@@ -100,6 +107,12 @@ class Lexer:
                 token_type = TokenType.annotation
                 self.read_num_or_ident()
 
+            elif self.is_operator():
+                token_type = TokenType.operator
+
+            elif self.is_separator(c):
+                token_type = TokenType.separator
+
             else:
                 print(f'error in {self.i}, symbol: {self.text[self.i]}')
                 self.i += 1
@@ -120,7 +133,7 @@ class Lexer:
         elif c == ' ':
             self.curr_pos_in_line += 1
         elif c == '\t':
-            self.curr_pos_in_line += 4 - (self.curr_pos_in_line % 4)
+            self.curr_pos_in_line += 4 - ((self.curr_pos_in_line - 1) % 4)
 
     def add_single_line_comment(self):
         i = self.text.find('\n', self.i + 2)
@@ -173,3 +186,22 @@ class Lexer:
             if not is_part_of_ident(self.text[self.j]):
                 return
             self.j += 1
+
+    # set j if token is operator
+    def is_operator(self):
+        operators = ('>>>=', '>>=', '<<=', '%=', '^=', '|=', '&=', '/=',
+                     '*=', '-=', '+=', '<<', '--', '++', '||', '&&', '!=',
+                     '>=', '<=', '==', '%', '^', '|', '&', '/', '*', '-',
+                     '+', ':', '?', '~', '!', '<', '>', '=', '...', '->', '::')
+        for j in range(4):
+            if self.i + j > self.len:
+                continue
+            if self.text[self.i:self.i + j] in operators:
+                self.j = self.i + j
+                return True
+
+    def is_separator(self, c):
+        separators = ('(', ')', '{', '}', '[', ']', ';', ',', '.')
+        if c in separators:
+            self.j = self.i + 1
+            return True

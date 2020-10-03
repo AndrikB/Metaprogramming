@@ -1,0 +1,8 @@
+{
+  "use_tab_character": false,
+  "indent_spaces_count" : 4,
+  "keep_indent_of_empty_line" : false,
+
+
+  "dont_indent_top_level_class_members": false
+}

@@ -124,7 +124,7 @@ class Lexer:
         return self.tokens
 
     def add_space(self, c):
-        self.tokens.append(Token(TokenType.whitespace, c))
+        self.add_token(TokenType.whitespace, c)
         self.i += 1
         if c == '\n':
             self.curr_line += 1
@@ -192,7 +192,7 @@ class Lexer:
                      '*=', '-=', '+=', '<<', '--', '++', '||', '&&', '!=',
                      '>=', '<=', '==', '%', '^', '|', '&', '/', '*', '-',
                      '+', ':', '?', '~', '!', '<', '>', '=', '...', '->', '::')
-        for j in range(4):
+        for j in range(4, 0, -1):
             if self.i + j > self.len:
                 continue
             if self.text[self.i:self.i + j] in operators:

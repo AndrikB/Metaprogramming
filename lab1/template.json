@@ -1,8 +1,37 @@
 {
-  "use_tab_character": false,
-  "indent_spaces_count" : 4,
-  "keep_indent_of_empty_line" : false,
+  "indent_spaces_count": 4,
+  "keep_indent_of_empty_line": false,
+  "label_ident": 0,
+  "absolute_label_ident": false,
+  "dont_indent_top_level_class_members": false,
+
+  "spaces": {
+    "before_parentheses": {
+      "method_declaration_parentheses": false,
+      "method_call_parentheses": false,
+      "if_parentheses": true,
+      "for_parentheses": true,
+      "while_parentheses": true,
+      "switch_parentheses": true,
+      "try_parentheses": true,
+      "catch_parentheses": true,
+      "synchronized_parentheses": true,
+      "annotation_parentheses": false
+    },
+    "around_operators": {
+      "assignment_operators": true,
+      "logical_operators": true,
+      "equality_operators": true,
+      "relational_operators": true,
+      "bitwise_operators": true,
+      "additive_operators": true,
+      "multiplicative_operators": true,
+      "shift_operators": true,
+      "unary_operators": false,
+      "lambda_arrow": true,
+      "method_reference_double_colon": false
+    }
+  }
 
 
-  "dont_indent_top_level_class_members": false
 }

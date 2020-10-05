@@ -284,18 +284,19 @@ class Formatter:
                             self.tokens.insert(next_id + 1, Formatter.space_token)
                 i += 1
 
-        add_space_before_left_brace_after_keyword_and_spaces('class', self.config.before_class_left_brace)
-        add_space_before_left_brace_after_method_declaration(self.config.before_method_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('if', self.config.before_if_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('else', self.config.before_else_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('for', self.config.before_for_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('while', self.config.before_while_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('do', self.config.before_do_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('switch', self.config.before_switch_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('try', self.config.before_try_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('catch', self.config.before_catch_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('finally', self.config.before_finally_left_brace)
-        add_space_before_left_brace_after_keyword_and_spaces('synchronized', self.config.before_synchronized_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('class', self.config.space_before_class_left_brace)
+        add_space_before_left_brace_after_method_declaration(self.config.space_before_method_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('if', self.config.space_before_if_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('else', self.config.space_before_else_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('for', self.config.space_before_for_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('while', self.config.space_before_while_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('do', self.config.space_before_do_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('switch', self.config.space_before_switch_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('try', self.config.space_before_try_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('catch', self.config.space_before_catch_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('finally', self.config.space_before_finally_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('synchronized',
+                                                             self.config.space_before_synchronized_left_brace)
 
     def fix_spaces_and_newlines(self):
         ident = 0

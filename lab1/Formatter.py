@@ -298,6 +298,23 @@ class Formatter:
         add_space_before_left_brace_after_keyword_and_spaces('synchronized',
                                                              self.config.space_before_synchronized_left_brace)
 
+    def add_spaces_before_keywords(self):
+        def add_space_between_brace_and_keyword(keyword, space):
+            if not space:
+                return
+            i = 1
+
+            while i < len(self.tokens):
+                if self.tokens[i].value == keyword and self.tokens[i - 1].value == '}':
+                    self.tokens.insert(i, Formatter.space_token)
+                    i += 1
+                i += 1
+
+        add_space_between_brace_and_keyword('else', self.config.space_before_else_keyword)
+        add_space_between_brace_and_keyword('while', self.config.space_before_while_keyword)
+        add_space_between_brace_and_keyword('catch', self.config.space_before_catch_keyword)
+        add_space_between_brace_and_keyword('finally', self.config.space_before_finally_keyword)
+
     def fix_spaces_and_newlines(self):
         ident = 0
         self.i = 0
@@ -333,4 +350,5 @@ class Formatter:
         self.add_spaces_before_parentheses()
         self.add_spaces_around_operators()
         self.add_spaces_before_left_brace()
+        self.add_spaces_before_keywords()
         # self.fix_spaces_and_newlines()

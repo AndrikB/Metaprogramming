@@ -45,3 +45,24 @@ class Config:
                 self.spaces_around_lambda_arrow = around_operators["lambda_arrow"]
                 self.spaces_around_method_reference_double_colon = around_operators["method_reference_double_colon"]
 
+            before_left_brace = spaces["before_left_brace"]
+            if before_left_brace:
+                self.before_class_left_brace = before_left_brace["class_left_brace"]
+                self.before_method_left_brace = before_left_brace["method_left_brace"]
+                self.before_if_left_brace = before_left_brace["if_left_brace"]
+                self.before_else_left_brace = before_left_brace["else_left_brace"]
+                self.before_for_left_brace = before_left_brace["for_left_brace"]
+                self.before_while_left_brace = before_left_brace["while_left_brace"]
+                self.before_do_left_brace = before_left_brace["do_left_brace"]
+                self.before_switch_left_brace = before_left_brace["switch_left_brace"]
+                self.before_try_left_brace = before_left_brace["try_left_brace"]
+                self.before_catch_left_brace = before_left_brace["catch_left_brace"]
+                self.before_finally_left_brace = before_left_brace["finally_left_brace"]
+                self.before_synchronized_left_brace = before_left_brace["synchronized_left_brace"]
+
+            before_keywords = spaces["before_keywords"]
+            if before_keywords:
+                self.before_else_keyword = before_keywords["else_keyword"]
+                self.before_while_keyword = before_keywords["while_keyword"]
+                self.before_catch_keyword = before_keywords["catch_keyword"]
+                self.before_finally_keyword = before_keywords["finally_keyword"]

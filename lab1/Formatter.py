@@ -29,6 +29,13 @@ class Formatter:
             _from += 1
         return -1
 
+    def get_next_no_whitespace_token_id(self, id):
+        while id < len(self.tokens):
+            id += 1
+            if self.tokens[id].token_type != TokenType.whitespace:
+                return id
+        return -1
+
     def remove_whitespaces_before_token(self):
         pass
 
@@ -233,7 +240,62 @@ class Formatter:
         add_space_after_annotation_before_parentheses(self.config.space_before_annotation_parentheses)
 
     def add_spaces_before_left_brace(self):
-        pass
+
+        def add_space_before_left_brace_after_keyword_and_spaces(keyword, space):
+            if not space:
+                return
+
+            def insert_space_before_first_brace(index):
+                index += 1
+                count_bracket = 0
+                while index < len(self.tokens):
+                    token = self.tokens[index]
+                    if token.value == 'if':  # for '} else if() {
+                        return
+                    if token.value == '(':
+                        count_bracket += 1
+                    elif token.value == ')':
+                        count_bracket -= 1
+                        if count_bracket == -1:
+                            return
+                    elif count_bracket == 0 and token.value == '{':
+                        self.tokens.insert(index, Formatter.space_token)
+                        return
+                    index += 1
+
+            i = 0
+            while i < len(self.tokens):
+                if self.tokens[i].value == keyword:
+                    insert_space_before_first_brace(i)
+                i += 1
+
+        def add_space_before_left_brace_after_method_declaration(space):
+            if not space:
+                return
+            i = 0
+            while i < len(self.tokens):
+                if self.tokens[i].token_type == TokenType.identifier:
+                    next_id = self.get_next_no_whitespace_token_id(i)
+                    if next_id == -1:
+                        return
+                    if self.tokens[next_id].value == '(':
+                        next_id = self.find_by_value(')', next_id)
+                        if self.tokens[next_id + 1].value == '{':
+                            self.tokens.insert(next_id + 1, Formatter.space_token)
+                i += 1
+
+        add_space_before_left_brace_after_keyword_and_spaces('class', self.config.before_class_left_brace)
+        add_space_before_left_brace_after_method_declaration(self.config.before_method_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('if', self.config.before_if_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('else', self.config.before_else_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('for', self.config.before_for_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('while', self.config.before_while_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('do', self.config.before_do_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('switch', self.config.before_switch_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('try', self.config.before_try_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('catch', self.config.before_catch_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('finally', self.config.before_finally_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('synchronized', self.config.before_synchronized_left_brace)
 
     def fix_spaces_and_newlines(self):
         ident = 0

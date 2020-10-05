@@ -30,6 +30,26 @@
       "unary_operators": false,
       "lambda_arrow": true,
       "method_reference_double_colon": false
+    },
+    "before_left_brace": {
+      "class_left_brace": true,
+      "method_left_brace": true,
+      "if_left_brace": true,
+      "else_left_brace": true,
+      "for_left_brace": true,
+      "while_left_brace": true,
+      "do_left_brace": true,
+      "switch_left_brace": true,
+      "try_left_brace": true,
+      "catch_left_brace": true,
+      "finally_left_brace": true,
+      "synchronized_left_brace": true
+    },
+    "before_keywords": {
+      "else_keyword": true,
+      "while_keyword": true,
+      "catch_keyword": true,
+      "finally_keyword": true
     }
   }
 

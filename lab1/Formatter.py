@@ -170,6 +170,71 @@ class Formatter:
         add_spaces_around_operator(('->', ''), self.config.spaces_around_lambda_arrow)
         add_spaces_around_operator('::', self.config.spaces_around_method_reference_double_colon)
 
+    def add_spaces_before_parentheses(self):
+        def add_space_after_word_before_bracket(word, space):
+            if not space:
+                return
+            i = 0
+            while i + 1 < len(self.tokens):
+                if self.tokens[i].value == word and self.tokens[i + 1].value == '(':
+                    self.tokens.insert(i + 1, Formatter.space_token)
+                    i += 1
+                i += 1
+
+        def add_space_after_method(space_declaration, space_call):
+            if (not space_declaration) and (not space_call):
+                return
+            i = 0
+
+            def is_method_declaration(index):
+                index -= 1
+                while index >= 0 and self.tokens[index].token_type == TokenType.whitespace:
+                    index -= 1
+                if index == -1:
+                    return False
+
+                if self.tokens[index].token_type in (TokenType.identifier, TokenType.keyword):
+                    return True
+                else:
+                    return False
+
+            while i + 1 < len(self.tokens):
+                if self.tokens[i].token_type == TokenType.identifier and \
+                        self.tokens[i + 1].value == '(':  # is method
+                    if is_method_declaration(i):
+                        if space_declaration:
+                            self.tokens.insert(i + 1, Formatter.space_token)
+                            i += 1
+                    else:
+                        if space_call:
+                            self.tokens.insert(i + 1, Formatter.space_token)
+                            i += 1
+                i += 1
+
+        def add_space_after_annotation_before_parentheses(space):
+            if not space:
+                return
+            i = 0
+            while i + 1 < len(self.tokens):
+                if self.tokens[i].token_type == TokenType.annotation and self.tokens[i + 1].value == '(':
+                    self.tokens.insert(i + 1, Formatter.space_token)
+                    i += 1
+                i += 1
+
+        add_space_after_method(self.config.space_before_method_declaration_parentheses,
+                               self.config.space_before_method_call_parentheses)
+        add_space_after_word_before_bracket('if', self.config.space_before_if_parentheses)
+        add_space_after_word_before_bracket('for', self.config.space_before_for_parentheses)
+        add_space_after_word_before_bracket('while', self.config.space_before_while_parentheses)
+        add_space_after_word_before_bracket('switch', self.config.space_before_switch_parentheses)
+        add_space_after_word_before_bracket('try', self.config.space_before_try_parentheses)
+        add_space_after_word_before_bracket('catch', self.config.space_before_catch_parentheses)
+        add_space_after_word_before_bracket('synchronized', self.config.space_before_synchronized_parentheses)
+        add_space_after_annotation_before_parentheses(self.config.space_before_annotation_parentheses)
+
+    def add_spaces_before_left_brace(self):
+        pass
+
     def fix_spaces_and_newlines(self):
         ident = 0
         self.i = 0
@@ -199,6 +264,10 @@ class Formatter:
 
     def format(self):
         self.remove_all_tabs_and_spaces()
+        # fix new lines
+        # add tabs
         self.add_spaces_between_words()
+        self.add_spaces_before_parentheses()
         self.add_spaces_around_operators()
+        self.add_spaces_before_left_brace()
         # self.fix_spaces_and_newlines()

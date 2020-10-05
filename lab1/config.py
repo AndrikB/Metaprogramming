@@ -17,6 +17,20 @@ class Config:
         # spaces
         spaces = template_data["spaces"]
         if spaces:
+
+            before_parentheses = spaces["before_parentheses"]
+            if before_parentheses:
+                self.space_before_method_declaration_parentheses = before_parentheses["method_declaration_parentheses"]
+                self.space_before_method_call_parentheses = before_parentheses["method_call_parentheses"]
+                self.space_before_if_parentheses = before_parentheses["if_parentheses"]
+                self.space_before_for_parentheses = before_parentheses["for_parentheses"]
+                self.space_before_while_parentheses = before_parentheses["while_parentheses"]
+                self.space_before_switch_parentheses = before_parentheses["switch_parentheses"]
+                self.space_before_try_parentheses = before_parentheses["try_parentheses"]
+                self.space_before_catch_parentheses = before_parentheses["catch_parentheses"]
+                self.space_before_synchronized_parentheses = before_parentheses["synchronized_parentheses"]
+                self.space_before_annotation_parentheses = before_parentheses["annotation_parentheses"]
+
             around_operators = spaces["around_operators"]
             if around_operators:
                 self.spaces_around_assignment_operators = around_operators["assignment_operators"]

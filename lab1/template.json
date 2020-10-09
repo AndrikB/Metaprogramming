@@ -50,6 +50,12 @@
       "while_keyword": true,
       "catch_keyword": true,
       "finally_keyword": true
+    },
+    "in_ternary_operator": {
+      "before_question": true,
+      "after_question": true,
+      "before_colon": true,
+      "after_colon": true
     }
   }
 

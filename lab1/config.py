@@ -66,3 +66,10 @@ class Config:
                 self.space_before_while_keyword = before_keywords["while_keyword"]
                 self.space_before_catch_keyword = before_keywords["catch_keyword"]
                 self.space_before_finally_keyword = before_keywords["finally_keyword"]
+
+            ternary = spaces["in_ternary_operator"]
+            if ternary:
+                self.space_in_ternary_before_question = ternary["before_question"]
+                self.space_in_ternary_after_question = ternary["after_question"]
+                self.space_in_ternary_before_colon = ternary["before_colon"]
+                self.space_in_ternary_after_colon = ternary["after_colon"]

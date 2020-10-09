@@ -315,6 +315,24 @@ class Formatter:
         add_space_between_brace_and_keyword('catch', self.config.space_before_catch_keyword)
         add_space_between_brace_and_keyword('finally', self.config.space_before_finally_keyword)
 
+    def add_spaces_in_ternary(self):
+        i = 0
+
+        def insert_space_if_true(position, condition):
+            if condition:
+                self.tokens.insert(position, Formatter.space_token)
+
+        while i < len(self.tokens):
+            if self.tokens[i].value == '?':  # may be start of ternary
+                colon = self.find_by_value(':', i, i + 10)
+                if colon != -1:  # it is real ternary
+                    insert_space_if_true(colon + 1, self.config.space_in_ternary_after_colon)
+                    insert_space_if_true(colon, self.config.space_in_ternary_before_colon)
+                    insert_space_if_true(i + 1, self.config.space_in_ternary_after_question)
+                    insert_space_if_true(i, self.config.space_in_ternary_before_question)
+                    i += 1
+            i += 1
+
     def fix_spaces_and_newlines(self):
         ident = 0
         self.i = 0
@@ -351,4 +369,5 @@ class Formatter:
         self.add_spaces_around_operators()
         self.add_spaces_before_left_brace()
         self.add_spaces_before_keywords()
+        self.add_spaces_in_ternary()
         # self.fix_spaces_and_newlines()

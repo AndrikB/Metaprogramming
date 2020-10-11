@@ -25,18 +25,6 @@ SLang - source language
     )
 
 
-# config = Config("template.json")
-# print(config)
-#
-# tokens = tokenize_file("test.txt")
-# formatter = Formatter(tokens)
-# formatter.format()
-# print("-------------------------")
-# print_to_file(formatter.tokens)
-
-print(len(sys.argv))
-print(sys.argv)
-
 if len(sys.argv) == 1:
     print("Error! Please, write arguments", '\n')
     print_help()

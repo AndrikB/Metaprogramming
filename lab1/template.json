@@ -56,6 +56,16 @@
       "after_question": true,
       "before_colon": true,
       "after_colon": true
+    },
+    "other": {
+      "before_comma": false,
+      "after_comma": true,
+      "before_for_semicolon": false,
+      "after_for_semicolon": true,
+      "after_type_cast": true,
+      "around_colon_in_foreach": true,
+      "before_opening_angle_bracket": false,
+      "after_opening_angle_bracket": false
     }
   }
 

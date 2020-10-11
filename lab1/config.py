@@ -73,3 +73,14 @@ class Config:
                 self.space_in_ternary_after_question = ternary["after_question"]
                 self.space_in_ternary_before_colon = ternary["before_colon"]
                 self.space_in_ternary_after_colon = ternary["after_colon"]
+
+            other = spaces["other"]
+            if other:
+                self.space_before_comma = other["before_comma"]
+                self.space_after_comma = other["after_comma"]
+                self.space_before_for_semicolon = other["before_for_semicolon"]  # and try
+                self.space_after_for_semicolon = other["after_for_semicolon"]  # and try
+                self.space_after_type_cast = other["after_type_cast"]
+                self.space_around_colon_in_foreach = other["around_colon_in_foreach"]
+                self.space_before_opening_angle_bracket = other["before_opening_angle_bracket"]
+                self.space_after_opening_angle_bracket = other["after_opening_angle_bracket"]

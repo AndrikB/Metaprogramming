@@ -147,9 +147,14 @@ class Formatter:
                 elif token.value == '>':
                     if count_open > 0:  # is generic
                         count_open -= 1
-                        if space_after_generic:
-                            self.tokens.insert(i + 1, Formatter.space_token)
-                            i += 1
+                        if count_open == 0:
+                            if space_after_generic:
+                                self.tokens.insert(i + 1, Formatter.space_token)
+                                i += 1
+                            elif self.tokens[i + 1].token_type == TokenType.identifier and \
+                                    self.tokens[i + 2].value != '(':
+                                self.tokens.insert(i + 1, Formatter.space_token)
+                                i += 1
                     elif space_operator:
                         self.tokens.insert(i, Formatter.space_token)
                         self.tokens.insert(i + 2, Formatter.space_token)
@@ -163,8 +168,9 @@ class Formatter:
         add_spaces_around_operator(('==', '!='), self.config.spaces_around_equality_operators)
         add_spaces_around_operator(('>=', '<='), self.config.spaces_around_relational_operators)
 
-        add_spaces_around_angle_brackets(self.config.spaces_around_relational_operators, False, False)  # todo
-        # todo add space if generic parameter in method "void foo(List<A>b)"
+        add_spaces_around_angle_brackets(self.config.spaces_around_relational_operators,
+                                         self.config.space_before_opening_angle_bracket,
+                                         self.config.space_after_opening_angle_bracket)
 
         add_spaces_around_operator(('&', '|', '^'), self.config.spaces_around_bitwise_operators)  # T extend A & B ?
 
@@ -250,7 +256,9 @@ class Formatter:
                 count_bracket = 0
                 while index < len(self.tokens):
                     token = self.tokens[index]
-                    if token.value == 'if':  # for '} else if() {
+                    if token.value == 'if':  # for '} else if() {'
+                        return
+                    if token.value == '\n':
                         return
                     if token.value == '(':
                         count_bracket += 1
@@ -333,6 +341,86 @@ class Formatter:
                     i += 1
             i += 1
 
+    def add_other_spaces(self):
+
+        def add_space_after_type_cast():
+            if not self.config.space_after_type_cast:
+                return
+            l_i = 0
+            while l_i < len(self.tokens):
+                if self.tokens[l_i].value == '(' and \
+                        self.tokens[l_i + 1].token_type in (TokenType.keyword, TokenType.identifier):  # (ident
+                    if self.tokens[l_i + 2].value == ')':
+                        l_i += 3
+                        self.tokens.insert(l_i, Formatter.space_token)
+                    elif self.tokens[l_i + 2].value == '[' and self.tokens[l_i + 3].value == ']' \
+                            and self.tokens[l_i + 4].value == ')':
+                        l_i += 5
+                        self.tokens.insert(l_i, Formatter.space_token)
+                    elif self.tokens[l_i + 2].value == '<':
+                        stack = ['(', '<']
+                        l_i += 2
+                        while len(stack) != 0:
+                            l_i += 1
+                            l_value = self.tokens[l_i].value
+                            if l_value in ('[', '<'):
+                                stack.append(l_value)
+                            elif l_value == ']':
+                                if stack[len(stack) - 1] == '[':
+                                    stack.pop()
+                                else:
+                                    break
+                            elif l_value == '>':
+                                if stack[len(stack) - 1] == '<':
+                                    stack.pop()
+                                else:
+                                    break
+                            elif l_value == ')':
+                                if stack[len(stack) - 1] == '(':
+                                    stack.pop()
+                                else:
+                                    break
+                            if len(stack) == 0:
+                                self.tokens.insert(l_i + 1, Formatter.space_token)
+                                break
+
+                l_i += 1
+
+        add_space_after_type_cast()
+        was_for_try = False
+        count_bracket = 0
+        i = 0
+        while i < len(self.tokens):
+            value = self.tokens[i].value
+            if value == ',':
+                if self.config.space_before_comma:
+                    self.tokens.insert(i, Formatter.space_token)
+                    i += 1
+                if self.config.space_after_comma:
+                    i += 1
+                    self.tokens.insert(i, Formatter.space_token)
+            elif value in ('for', 'try'):
+                was_for_try = True
+            elif value == '(' and was_for_try:
+                count_bracket += 1
+            elif value == ')' and was_for_try:
+                count_bracket -= 1
+                if count_bracket == 0:
+                    was_for_try = False
+            elif value == ';' and was_for_try:
+                if self.config.space_before_for_semicolon:
+                    self.tokens.insert(i, Formatter.space_token)
+                    i += 1
+                if self.config.space_after_for_semicolon:
+                    i += 1
+                    self.tokens.insert(i, Formatter.space_token)
+            elif value == ':' and was_for_try:
+                if self.config.space_around_colon_in_foreach:
+                    self.tokens.insert(i, Formatter.space_token)
+                    self.tokens.insert(i + 2, Formatter.space_token)
+                    i += 2
+            i += 1
+
     def fix_spaces_and_newlines(self):
         ident = 0
         self.i = 0
@@ -370,4 +458,5 @@ class Formatter:
         self.add_spaces_before_left_brace()
         self.add_spaces_before_keywords()
         self.add_spaces_in_ternary()
+        self.add_other_spaces()
         # self.fix_spaces_and_newlines()

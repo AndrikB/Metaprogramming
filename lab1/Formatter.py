@@ -79,6 +79,14 @@ class Formatter:
             else:
                 i += 1
 
+    def keep_maximum_new_lines(self, max, pos):
+        while self.tokens[pos].value == '\n':
+            if max == 0:
+                self.tokens.pop(pos)
+            else:
+                max -= 1
+                pos +=1
+
     def fix_new_lines(self):
         i = 1
         stack = []
@@ -98,6 +106,7 @@ class Formatter:
 
             if was_annotation and token.value != '(' and stack[len(stack) - 1][0] == '@':
                 add_new_line_if_missing(i)
+                self.keep_maximum_new_lines(1, i)
                 stack.pop()
                 was_annotation = False
                 continue

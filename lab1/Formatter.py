@@ -36,6 +36,13 @@ class Formatter:
                 return id
         return -1
 
+    def get_prev_no_whitespace_token_id(self, id):
+        while id > 0:
+            id -= 1
+            if self.tokens[id].token_type != TokenType.whitespace:
+                return id
+        return -1
+
     def remove_whitespaces_before_token(self):
         pass
 
@@ -136,7 +143,7 @@ class Formatter:
                 if token.value == '<':
                     if is_generic(i):
                         count_open += 1
-                        if space_before_generic:
+                        if space_before_generic or self.tokens[i - 1].token_type == TokenType.keyword:
                             self.tokens.insert(i, Formatter.space_token)
                             i += 1
 
@@ -346,9 +353,11 @@ class Formatter:
         def add_space_after_type_cast():
             if not self.config.space_after_type_cast:
                 return
-            l_i = 0
+            l_i = 1
             while l_i < len(self.tokens):
                 if self.tokens[l_i].value == '(' and \
+                        self.tokens[self.get_prev_no_whitespace_token_id(l_i)].token_type \
+                        not in (TokenType.identifier, TokenType.keyword) and \
                         self.tokens[l_i + 1].token_type in (TokenType.keyword, TokenType.identifier):  # (ident
                     if self.tokens[l_i + 2].value == ')':
                         l_i += 3

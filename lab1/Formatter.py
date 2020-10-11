@@ -2,6 +2,12 @@ import config
 from Lexer import Token, TokenType, Position
 
 
+def format_tokens(tokens, config_file):
+    formatter = Formatter(tokens, config_file)
+    formatter.format()
+    return formatter.tokens
+
+
 class Formatter:
     newline_token = Token(TokenType.whitespace, '\n')
     space_token = Token(TokenType.whitespace, ' ')

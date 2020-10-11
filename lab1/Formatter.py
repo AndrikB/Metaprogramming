@@ -8,6 +8,20 @@ def format_tokens(tokens, config_file):
     return formatter.tokens
 
 
+def replace_tab_to_space(tokens):
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+        if token.value == '\t':
+            next_token = tokens[i + 1]
+            token.value = ' '
+            while token.position.column + 1 != next_token.position.column:
+                i += 1
+                token = Token(TokenType.whitespace, ' ', Position(token.position.row, token.position.column + 1))
+                tokens.insert(i, token)
+        i += 1
+
+
 class Formatter:
     newline_token = Token(TokenType.whitespace, '\n')
     space_token = Token(TokenType.whitespace, ' ')
@@ -56,19 +70,6 @@ class Formatter:
     def remove_whitespaces_after_token(self):
         while self.tokens[self.i + 1].token_type == TokenType.whitespace:
             self.tokens.pop(self.i + 1)
-
-    def replace_tab_to_space(self):
-        i = 0
-        while i < len(self.tokens):
-            token = self.tokens[i]
-            if token.value == '\t':
-                next_token = self.tokens[i + 1]
-                token.value = ' '
-                while token.position.column + 1 != next_token.position.column:
-                    i += 1
-                    token = Token(TokenType.whitespace, ' ', Position(token.position.row, token.position.column + 1))
-                    self.tokens.insert(i, token)
-            i += 1
 
     def remove_all_tabs_and_spaces(self):
         i = 0

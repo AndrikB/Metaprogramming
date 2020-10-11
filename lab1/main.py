@@ -69,6 +69,6 @@ else:
             tokens = tokenize_file(file)
             new_tokens = format_tokens(tokens.copy(), config_file)
             if mode == '-f':
-                print_to_file(new_tokens, 'n_'+file)
+                print_to_file(new_tokens, file)
             else:
-                write_logs(tokens, new_tokens)
+                write_logs(tokens, new_tokens, file)

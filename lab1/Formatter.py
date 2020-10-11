@@ -5,6 +5,7 @@ from Lexer import Token, TokenType, Position
 class Formatter:
     newline_token = Token(TokenType.whitespace, '\n')
     space_token = Token(TokenType.whitespace, ' ')
+    other_tokens_in_stack = ('if', 'else', 'for', 'while', 'do', 'switch', 'try')  # todo add another if need
 
     def __init__(self, tokens, config_file='template.json'):
         self.tokens = tokens
@@ -71,11 +72,170 @@ class Formatter:
             else:
                 i += 1
 
+    def fix_new_lines(self):
+        i = 1
+        stack = []
+        was_annotation = False
+
+        def add_new_line_if_missing(position):
+            if self.tokens[position].value != '\n':
+                self.tokens.insert(position, Formatter.newline_token)
+
+        while i < len(self.tokens) - 1:
+            prev_token = self.tokens[i - 1]
+            token = self.tokens[i]
+            next_token = self.tokens[i + 1]
+
+            if token.value in self.other_tokens_in_stack:
+                stack.append(token.value)
+
+            if was_annotation and token.value != '(' and stack[len(stack) - 1][0] == '@':
+                add_new_line_if_missing(i)
+                stack.pop()
+                was_annotation = False
+                continue
+
+            if token.value == '{':
+                stack.append(token.value)
+                if prev_token.value not in ('(', ']', '='):
+                    add_new_line_if_missing(i + 1)
+
+            elif token.value == '}':
+                while stack.pop() != '{':
+                    pass
+
+                if next_token.value == 'else' and not self.config.else_on_new_line or \
+                        (next_token.value == 'while' and not self.config.while_on_new_line and
+                         len(stack) > 1 and stack[len(stack) - 1] == 'do') or \
+                        next_token.value == 'catch' and not self.config.catch_on_new_line or \
+                        next_token.value == 'finally' and not self.config.finally_on_new_line:
+                    i += 1
+                    if len(stack) > 1 and stack[len(stack) - 1] in self.other_tokens_in_stack:
+                        stack.pop()  # 'if', 'class', 'for', method, ...
+                    stack.append(next_token.value)
+
+                else:
+                    if len(stack) > 1 and stack[len(stack) - 1] in self.other_tokens_in_stack:
+                        stack.pop()  # 'if', 'class', 'for', method, ...
+
+                    if next_token.value not in (';', ')'):
+                        add_new_line_if_missing(i + 1)
+
+            elif token.value == ';':
+                if not (len(stack) > 1 and stack[len(stack) - 1] == '('):
+                    add_new_line_if_missing(i + 1)
+                else:
+                    pass
+                    # stack.pop()
+
+            elif token.value == ':' and \
+                    (self.tokens[i - 2].value == 'case' or self.tokens[i - 1].value == 'default'):
+                if next_token.value != '{':
+                    add_new_line_if_missing(i + 1)
+                    i += 1
+
+            elif token.value == '\n':
+                if len(stack) > 0 and stack[len(stack) - 1] in self.other_tokens_in_stack:
+                    stack.pop()
+                elif not (prev_token.value in (')', ';', '{', '}', '\n') or
+                          (len(stack) > 1 and stack[len(stack) - 1] in self.other_tokens_in_stack) or
+                          prev_token.token_type in (TokenType.annotation, TokenType.comment)):
+                    self.tokens.pop(i)
+                    i -= 1
+
+            elif token.value == '(':
+                stack.append(token.value)
+            elif token.value == ')':
+                while stack.pop() != '(':
+                    pass
+
+            elif token.token_type == TokenType.identifier and \
+                    len(stack) > 1 and stack[len(stack) - 1] in ('for', 'while', 'do', 'if', 'else'):
+                add_new_line_if_missing(i)
+                stack.pop()
+
+            elif token.token_type == TokenType.annotation:
+                was_annotation = True
+                stack.append(token.value)
+
+            i += 1
+        pass
+
+    def add_tabs(self):
+        indent = 0
+        temp_indent = 0
+        case_indent = 0
+        need_indent = False
+        i = 1
+
+        def add_tabs():
+            nonlocal indent
+            nonlocal temp_indent
+            nonlocal case_indent
+            nonlocal i
+            nonlocal need_indent
+            for l_i in range(indent + temp_indent + case_indent):
+                self.tokens.insert(i, Formatter.space_token)
+                i += 1
+            temp_indent = 0
+            need_indent = False
+
+        end_statement_tokens = (';', '}')
+        stack = []
+        while i < len(self.tokens):
+            token = self.tokens[i]
+            # prev_token = self.tokens[i - 1]
+            # next_token = self.tokens[i - 1]
+
+            if need_indent and token.value not in ('}', 'case'):
+                if not ('switch' in stack and token.value == 'default'):
+                    add_tabs()
+
+            if token.value in self.other_tokens_in_stack:
+                # if len(stack) > 0 and stack[len(stack) - 1] not in self.other_tokens_in_stack:
+                stack.append(token.value)
+
+            elif token.value == '{':
+                case_indent = 0  # it may be when 'case 0: { some code }
+                stack.append(token.value)
+                indent += self.config.indent_spaces_count
+
+            elif token.value == '}':
+                while stack.pop() != '{':
+                    pass
+                if len(stack) > 1 and stack[len(stack) - 1] in self.other_tokens_in_stack:
+                    stack.pop()  # 'if', 'class', 'for', method, ...
+                indent -= self.config.indent_spaces_count
+                case_indent = 0  # it may be when 'case 0: { some code }
+                if need_indent:
+                    add_tabs()
+
+            elif token.value == 'case' or ('switch' in stack and token.value == 'default'):
+                case_indent = 0
+                add_tabs()
+                case_indent = self.config.indent_spaces_count
+
+            elif token.value == '\n':
+                need_indent = True
+                if len(stack) > 1 and stack[len(stack) - 1] in self.other_tokens_in_stack:
+                    temp_indent += self.config.indent_spaces_count
+                    stack.pop()
+                elif self.tokens[i - 1].value == ')' and self.tokens[i + 1].value == '.':
+                    temp_indent += self.config.continuation_indent_spaces_count
+
+            elif token.value == ';':
+                if len(stack) > 1 and stack[len(stack) - 1] in self.other_tokens_in_stack:
+                    stack.pop()
+                temp_indent = 0
+
+            i += 1
+
     def add_spaces_between_words(self):
         i = 1
         types = (TokenType.keyword, TokenType.identifier, TokenType.number_literal, TokenType.string_literal)
         while i < len(self.tokens):
-            if self.tokens[i - 1].token_type in types and self.tokens[i].token_type in types:
+            if (self.tokens[i - 1].token_type in types or self.tokens[i - 1].value == ']') \
+                    and self.tokens[i].token_type in types:
                 self.tokens.insert(i, Formatter.space_token)
                 i += 1
             i += 1
@@ -307,6 +467,7 @@ class Formatter:
         add_space_before_left_brace_after_keyword_and_spaces('while', self.config.space_before_while_left_brace)
         add_space_before_left_brace_after_keyword_and_spaces('do', self.config.space_before_do_left_brace)
         add_space_before_left_brace_after_keyword_and_spaces('switch', self.config.space_before_switch_left_brace)
+        add_space_before_left_brace_after_keyword_and_spaces('case', self.config.space_before_switch_left_brace)
         add_space_before_left_brace_after_keyword_and_spaces('try', self.config.space_before_try_left_brace)
         add_space_before_left_brace_after_keyword_and_spaces('catch', self.config.space_before_catch_left_brace)
         add_space_before_left_brace_after_keyword_and_spaces('finally', self.config.space_before_finally_left_brace)
@@ -459,8 +620,9 @@ class Formatter:
 
     def format(self):
         self.remove_all_tabs_and_spaces()
-        # fix new lines
+        self.fix_new_lines()
         # add tabs
+        self.add_tabs()
         self.add_spaces_between_words()
         self.add_spaces_before_parentheses()
         self.add_spaces_around_operators()

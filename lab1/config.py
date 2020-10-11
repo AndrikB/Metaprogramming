@@ -8,11 +8,20 @@ class Config:
         template_data = json.loads(template_file.read())
 
         self.indent_spaces_count = template_data["indent_spaces_count"]
+        self.continuation_indent_spaces_count = template_data["continuation_indent_spaces_count"]
         self.keep_indent_of_empty_line = template_data["keep_indent_of_empty_line"]
 
         self.label_ident = template_data["label_ident"]
         self.absolute_label_ident = template_data["absolute_label_ident"]
         self.dont_indent_top_level_class_members = template_data["dont_indent_top_level_class_members"]
+
+        # wrapping and braces
+        wrapping_and_braces = template_data["wrapping_and_braces"]
+        if wrapping_and_braces:
+            self.else_on_new_line = wrapping_and_braces["else_on_new_line"]
+            self.while_on_new_line = wrapping_and_braces["while_on_new_line"]
+            self.catch_on_new_line = wrapping_and_braces["catch_on_new_line"]
+            self.finally_on_new_line = wrapping_and_braces["finally_on_new_line"]
 
         # spaces
         spaces = template_data["spaces"]

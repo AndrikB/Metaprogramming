@@ -1,9 +1,17 @@
 {
   "indent_spaces_count": 4,
+  "continuation_indent_spaces_count": 8,
   "keep_indent_of_empty_line": false,
   "label_ident": 0,
   "absolute_label_ident": false,
   "dont_indent_top_level_class_members": false,
+
+  "wrapping_and_braces": {
+    "else_on_new_line": false,
+    "while_on_new_line": false,
+    "catch_on_new_line": false,
+    "finally_on_new_line": false
+  },
 
   "spaces": {
     "before_parentheses": {

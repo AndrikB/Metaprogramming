@@ -93,3 +93,25 @@ class Config:
                 self.space_around_colon_in_foreach = other["around_colon_in_foreach"]
                 self.space_before_opening_angle_bracket = other["before_opening_angle_bracket"]
                 self.space_after_opening_angle_bracket = other["after_opening_angle_bracket"]
+
+        # blank_lines
+        blank_lines = template_data["blank_lines"]
+        if blank_lines:
+            minimum = blank_lines["minimum"]
+            if minimum:
+                self.minimum_blank_lines_before_package = minimum["before_package"]
+                self.minimum_blank_lines_before_imports = minimum["before_imports"]
+                self.minimum_blank_lines_before_class_end = minimum["before_class_end"]
+                self.minimum_blank_lines_after_class_header = minimum["after_class_header"]
+                self.minimum_blank_lines_around_field_in_interface = minimum["around_field_in_interface"]
+                self.minimum_blank_lines_around_field = minimum["around_field"]
+                self.minimum_blank_lines_around_method_in_interface = minimum["around_method_in_interface"]
+                self.minimum_blank_lines_around_method = minimum["around_method"]
+            maximum = blank_lines["maximum"]
+            if maximum:
+                self.maximum_blank_lines_before_package = maximum["before_package"]
+                self.maximum_blank_lines_before_imports = maximum["before_imports"]
+                self.maximum_blank_lines_between_imports = maximum["between_imports"]
+                self.maximum_blank_lines_before_close_bracket = maximum["before_close_bracket"]
+                self.maximum_blank_lines_in_code = maximum["in_code"]
+                self.all_maximum = maximum["all_maximum"]

@@ -25,7 +25,9 @@ def replace_tab_to_space(tokens):
 class Formatter:
     newline_token = Token(TokenType.whitespace, '\n')
     space_token = Token(TokenType.whitespace, ' ')
-    other_tokens_in_stack = ('if', 'else', 'for', 'while', 'do', 'switch', 'try', 'class')  # todo add another if need
+    other_tokens_in_stack = ('if', 'else', 'for', 'while', 'do', 'switch', 'try', 'class', 'interface')
+
+    # todo add another if need
 
     def __init__(self, tokens, config_file='template.json'):
         self.tokens = tokens
@@ -84,24 +86,46 @@ class Formatter:
                 i += 1
 
     def keep_maximum_new_lines(self, _max, pos):
+        deleted = 0
         while self.tokens[pos].value == '\n':
             if _max == 0:
                 self.tokens.pop(pos)
+                deleted += 1
             else:
                 _max -= 1
                 pos += 1
+        return deleted
+
+    def set_minimum_new_lines(self, _min, pos):
+        while pos >= 0 and self.tokens[pos].value == '\n':
+            _min -= 1
+            pos += 1
+
+        if _min < 0:
+            return 0
+        r_min = _min
+
+        while _min > 0:
+            self.tokens.insert(pos, Formatter.newline_token)
+            _min -= 1
+            pos += 1
+        return r_min
 
     def fix_new_lines(self):
-        i = 1
+        i = 0
         stack = []
         was_annotation = False
+        was_import = False
 
         def add_new_line_if_missing(position):
             if self.tokens[position].value != '\n':
                 self.tokens.insert(position, Formatter.newline_token)
 
         while i < len(self.tokens) - 1:
-            prev_token = self.tokens[i - 1]
+            if i != 0:
+                prev_token = self.tokens[i - 1]
+            else:
+                prev_token = Formatter.space_token
             token = self.tokens[i]
             next_token = self.tokens[i + 1]
 
@@ -116,6 +140,8 @@ class Formatter:
                 continue
 
             if token.value == '{':
+                if stack[-1] in ('class', 'interface'):
+                    i += self.set_minimum_new_lines(self.config.minimum_blank_lines_after_class_header + 1, i + 1)
                 stack.append(token.value)
                 if prev_token.value not in ('(', ']', '='):
                     add_new_line_if_missing(i + 1)
@@ -123,6 +149,8 @@ class Formatter:
             elif token.value == '}':
                 while stack.pop() != '{':
                     pass
+                i -= self.keep_maximum_new_lines(self.config.maximum_blank_lines_before_close_bracket + 1,
+                                                 self.get_prev_no_whitespace_token_id(i) + 1)
 
                 if next_token.value == 'else' and not self.config.else_on_new_line or \
                         (next_token.value == 'while' and not self.config.while_on_new_line and
@@ -135,7 +163,12 @@ class Formatter:
                     stack.append(next_token.value)
 
                 else:
-                    if len(stack) > 1 and stack[len(stack) - 1] in self.other_tokens_in_stack:
+                    if len(stack) > 0 and (stack[-1] in ('class', 'interface')) \
+                            and (self.tokens[self.get_prev_no_whitespace_token_id(i)].value != '{'):
+                        i += self.set_minimum_new_lines(self.config.minimum_blank_lines_before_class_end + 1,
+                                                        self.get_prev_no_whitespace_token_id(i) + 1)
+
+                    if len(stack) > 0 and stack[len(stack) - 1] in self.other_tokens_in_stack:
                         stack.pop()  # 'if', 'class', 'for', method, ...
 
                     if next_token.value not in (';', ')'):
@@ -147,6 +180,30 @@ class Formatter:
                 else:
                     pass
                     # stack.pop()
+                if len(stack) > 2:
+                    i -= self.keep_maximum_new_lines(self.config.maximum_blank_lines_in_code + 1, i + 1)
+                elif len(stack) == 2:
+                    if self.tokens[i - 1].value == ')':  # method
+                        if stack[0] == 'class':
+                            pass
+                        else:
+                            i += self.set_minimum_new_lines(
+                                self.config.minimum_blank_lines_around_method_in_interface + 1, i + 1)
+                            pos = i
+                            while self.tokens[pos].value != '\n':
+                                pos -= 1
+                            i += self.set_minimum_new_lines(
+                                self.config.minimum_blank_lines_around_method_in_interface + 1,
+                                self.get_prev_no_whitespace_token_id(pos) + 1)
+                    else:
+                        count = self.config.minimum_blank_lines_around_field if stack[0] == 'class' \
+                            else self.config.minimum_blank_lines_around_field_in_interface
+
+                        i += self.set_minimum_new_lines(count + 1, i + 1)
+                        pos = i
+                        while self.tokens[pos].value != '\n':
+                            pos -= 1
+                        i += self.set_minimum_new_lines(count + 1, self.get_prev_no_whitespace_token_id(pos) + 1)
 
             elif token.value == ':' and \
                     (self.tokens[i - 2].value == 'case' or self.tokens[i - 1].value == 'default'):
@@ -162,6 +219,9 @@ class Formatter:
                           prev_token.token_type in (TokenType.annotation, TokenType.comment)):
                     self.tokens.pop(i)
                     i -= 1
+                else:
+                    i -= self.keep_maximum_new_lines(self.config.all_maximum + 1,
+                                                     self.get_prev_no_whitespace_token_id(i))
 
             elif token.value == '(':
                 stack.append(token.value)
@@ -178,8 +238,24 @@ class Formatter:
                 was_annotation = True
                 stack.append(token.value)
 
+            elif token.value == 'package' and self.get_prev_no_whitespace_token_id(i) != -1:
+                i += self.set_minimum_new_lines(self.config.minimum_blank_lines_before_package + 1,
+                                                self.get_prev_no_whitespace_token_id(i) + 1)
+                i -= self.keep_maximum_new_lines(self.config.maximum_blank_lines_before_package + 1,
+                                                 self.get_prev_no_whitespace_token_id(i) + 1)
+
+            elif token.value == 'import' and self.get_prev_no_whitespace_token_id(i) != -1:
+                if not was_import:
+                    i += self.set_minimum_new_lines(self.config.minimum_blank_lines_before_imports + 1,
+                                                    self.get_prev_no_whitespace_token_id(i) + 1)
+                    i -= self.keep_maximum_new_lines(self.config.maximum_blank_lines_before_imports + 1,
+                                                     self.get_prev_no_whitespace_token_id(i) + 1)
+                else:
+                    i -= self.keep_maximum_new_lines(self.config.maximum_blank_lines_between_imports + 1,
+                                                     self.get_prev_no_whitespace_token_id(i) + 1)
+                was_import = True
+
             i += 1
-        pass
 
     def add_tabs(self):
         indent = 0

@@ -75,6 +75,27 @@
       "before_opening_angle_bracket": false,
       "after_opening_angle_bracket": false
     }
+  },
+
+  "blank_lines": {
+    "minimum": {
+      "before_package": 2,
+      "before_imports": 1,
+      "after_class_header": 0,
+      "before_class_end": 0,
+      "around_field_in_interface": 0,
+      "around_field": 0,
+      "around_method_in_interface": 1,
+      "around_method": 1
+    },
+    "maximum": {
+      "before_package": 2,
+      "before_imports": 2,
+      "between_imports": 1,
+      "before_close_bracket": 2,
+      "in_code": 1,
+      "all_maximum": 2
+    }
   }
 
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def getFiles(path):
+def get_files(path):
     result = list(Path(path).rglob("*.[jJ][aA][vV][aA]"))
     return result
 

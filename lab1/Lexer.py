@@ -1,20 +1,20 @@
 def tokenize_file(file_name):
-    file = open(file_name)
+    file = open(file_name, encoding='utf-8')
     return Lexer(file.read()).tokenize_text()
 
 
 class TokenType:
-    whitespace, \
-    comment, \
-    annotation, \
-    keyword, \
-    separator, \
-    operator, \
-    identifier, \
-    number_literal, \
-    string_literal, \
-    error, \
-    *_ = range(20)
+    (whitespace,
+     comment,
+     annotation,
+     keyword,
+     separator,
+     operator,
+     identifier,
+     number_literal,
+     string_literal,
+     error,
+     *_) = range(20)
 
 
 class Position:

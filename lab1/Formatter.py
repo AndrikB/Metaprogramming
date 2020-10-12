@@ -35,6 +35,8 @@ class Formatter:
     def find_by_value(self, value, _from=0, to=-1):
         if to == -1:
             to = len(self.tokens)
+        if to > len(self.tokens):
+            to = len(self.tokens)
         while _from < to:
             if self.tokens[_from].value == value:
                 return _from
@@ -50,18 +52,18 @@ class Formatter:
             _from += 1
         return -1
 
-    def get_next_no_whitespace_token_id(self, id):
-        while id < len(self.tokens):
-            id += 1
-            if self.tokens[id].token_type != TokenType.whitespace:
-                return id
+    def get_next_no_whitespace_token_id(self, _id):
+        while _id < len(self.tokens):
+            _id += 1
+            if self.tokens[_id].token_type != TokenType.whitespace:
+                return _id
         return -1
 
-    def get_prev_no_whitespace_token_id(self, id):
-        while id > 0:
-            id -= 1
-            if self.tokens[id].token_type != TokenType.whitespace:
-                return id
+    def get_prev_no_whitespace_token_id(self, _id):
+        while _id > 0:
+            _id -= 1
+            if self.tokens[_id].token_type != TokenType.whitespace:
+                return _id
         return -1
 
     def remove_whitespaces_before_token(self):
@@ -79,13 +81,13 @@ class Formatter:
             else:
                 i += 1
 
-    def keep_maximum_new_lines(self, max, pos):
+    def keep_maximum_new_lines(self, _max, pos):
         while self.tokens[pos].value == '\n':
-            if max == 0:
+            if _max == 0:
                 self.tokens.pop(pos)
             else:
-                max -= 1
-                pos +=1
+                _max -= 1
+                pos += 1
 
     def fix_new_lines(self):
         i = 1
@@ -196,7 +198,6 @@ class Formatter:
             temp_indent = 0
             need_indent = False
 
-        end_statement_tokens = (';', '}')
         stack = []
         while i < len(self.tokens):
             token = self.tokens[i]

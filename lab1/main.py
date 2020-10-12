@@ -3,7 +3,7 @@ import sys
 from Formatter import format_tokens
 from Lexer import tokenize_file
 from logs import write_logs
-from utils import getFiles, print_to_file
+from utils import get_files, print_to_file
 
 
 def print_help():
@@ -49,7 +49,7 @@ else:
         path = sys.argv[3 + inc]
 
         if p_d_f in ('-p', '-d'):
-            files = getFiles(path)
+            files = get_files(path)
         else:
             files = [path]
 

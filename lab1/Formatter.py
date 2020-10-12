@@ -27,8 +27,6 @@ class Formatter:
     space_token = Token(TokenType.whitespace, ' ')
     other_tokens_in_stack = ('if', 'else', 'for', 'while', 'do', 'switch', 'try', 'class', 'interface')
 
-    # todo add another if need
-
     def __init__(self, tokens, config_file='template.json'):
         self.tokens = tokens
         self.config = config.Config(config_file)
@@ -69,13 +67,6 @@ class Formatter:
             if self.tokens[_id].token_type != TokenType.whitespace:
                 return _id
         return -1
-
-    def remove_whitespaces_before_token(self):
-        pass
-
-    def remove_whitespaces_after_token(self):
-        while self.tokens[self.i + 1].token_type == TokenType.whitespace:
-            self.tokens.pop(self.i + 1)
 
     def remove_all_tabs_and_spaces(self):
         i = 0

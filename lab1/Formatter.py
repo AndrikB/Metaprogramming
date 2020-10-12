@@ -131,7 +131,7 @@ class Formatter:
                 continue
 
             if token.value == '{':
-                if stack[-1] in ('class', 'interface'):
+                if len(stack) > 0 and stack[-1] in ('class', 'interface'):
                     i += self.set_minimum_new_lines(self.config.minimum_blank_lines_after_class_header + 1, i + 1)
                 stack.append(token.value)
                 if prev_token.value not in ('(', ']', '='):

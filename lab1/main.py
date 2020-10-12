@@ -57,9 +57,12 @@ else:
             files = [path]
 
         for file in files:
-            tokens = tokenize_file(file)
-            new_tokens = format_tokens(tokens.copy(), config_file)
-            if mode == '-f':
-                print_to_file(new_tokens, file)
-            else:
-                write_logs(tokens, new_tokens, file)
+            try:
+                tokens = tokenize_file(file)
+                new_tokens = format_tokens(tokens.copy(), config_file)
+                if mode == '-f':
+                    print_to_file(new_tokens, file)
+                else:
+                    write_logs(tokens, new_tokens, file)
+            except Exception as e:
+                print(f'error in {file}')

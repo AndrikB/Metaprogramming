@@ -25,7 +25,7 @@ def replace_tab_to_space(tokens):
 class Formatter:
     newline_token = Token(TokenType.whitespace, '\n')
     space_token = Token(TokenType.whitespace, ' ')
-    other_tokens_in_stack = ('if', 'else', 'for', 'while', 'do', 'switch', 'try')  # todo add another if need
+    other_tokens_in_stack = ('if', 'else', 'for', 'while', 'do', 'switch', 'try', 'class')  # todo add another if need
 
     def __init__(self, tokens, config_file='template.json'):
         self.tokens = tokens
@@ -214,15 +214,17 @@ class Formatter:
 
             elif token.value == '{':
                 case_indent = 0  # it may be when 'case 0: { some code }
+                if not (self.config.dont_indent_top_level_class_members and len(stack) == 1 and stack[-1] == 'class'):
+                    indent += self.config.indent_spaces_count
                 stack.append(token.value)
-                indent += self.config.indent_spaces_count
 
             elif token.value == '}':
                 while stack.pop() != '{':
                     pass
-                if len(stack) > 1 and stack[len(stack) - 1] in self.other_tokens_in_stack:
+                if not (self.config.dont_indent_top_level_class_members and len(stack) == 1 and stack[-1] == 'class'):
+                    indent -= self.config.indent_spaces_count
+                if len(stack) > 0 and stack[len(stack) - 1] in self.other_tokens_in_stack:
                     stack.pop()  # 'if', 'class', 'for', method, ...
-                indent -= self.config.indent_spaces_count
                 case_indent = 0  # it may be when 'case 0: { some code }
                 if need_indent:
                     add_tabs()

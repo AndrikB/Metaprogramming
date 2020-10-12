@@ -37,6 +37,8 @@ class Formatter:
             to = len(self.tokens)
         if to > len(self.tokens):
             to = len(self.tokens)
+        if _from < 0:
+            _from = 0
         while _from < to:
             if self.tokens[_from].value == value:
                 return _from
@@ -203,6 +205,18 @@ class Formatter:
             token = self.tokens[i]
             # prev_token = self.tokens[i - 1]
             # next_token = self.tokens[i - 1]
+
+            if need_indent and token.token_type == TokenType.identifier and \
+                    self.tokens[i + 1].value == ':' and self.find_by_value('?', i - 10, i) == -1:  # is label
+                label_indent = 0
+                if not self.config.absolute_label_ident:
+                    label_indent = indent + temp_indent + case_indent
+                label_indent += self.config.label_ident
+
+                for l_i in range(label_indent):
+                    self.tokens.insert(i, Formatter.space_token)
+                    i += 1
+                need_indent = False
 
             if need_indent and token.value not in ('}', 'case'):
                 if not ('switch' in stack and token.value == 'default'):

@@ -9,14 +9,17 @@ from utils import get_files, print_to_file
 def print_help():
     print(
         """
-ILang SLangFormatter --verify -(p|d|f) /..
-ILang SLangFormatter -v -(p|d|f) /..
-ILang SLangFormatter --format template name -(p|d|f) /..
-ILang SLangFormatter -f template name -(p|d|f) /..
-ILang SLangFormatter --help
-ILang SLangFormatter -h
-ILang - implementation language
-SLang - source language
+***************** examples *****************
+
+python main.py --verify -(p|d|f) /..
+python main.py -v -(p|d|f) /..
+python main.py --format template_name -(p|d|f) /..
+python main.py -f template_name -(p|d|f) /..
+python main.py --help
+python main.py -h
+
+where :
+
 -p - project
 -d - directory
 -f - file

@@ -194,7 +194,7 @@ class Formatter:
             nonlocal case_indent
             nonlocal i
             nonlocal need_indent
-            for l_i in range(indent + temp_indent + case_indent):
+            for _ in range(indent + temp_indent + case_indent):
                 self.tokens.insert(i, Formatter.space_token)
                 i += 1
             temp_indent = 0
@@ -220,7 +220,8 @@ class Formatter:
 
             if need_indent and token.value not in ('}', 'case'):
                 if not ('switch' in stack and token.value == 'default'):
-                    add_tabs()
+                    if not (token.value == '\n') or self.config.keep_indent_of_empty_line:
+                        add_tabs()
 
             if token.value in self.other_tokens_in_stack:
                 # if len(stack) > 0 and stack[len(stack) - 1] not in self.other_tokens_in_stack:

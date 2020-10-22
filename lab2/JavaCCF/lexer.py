@@ -28,13 +28,14 @@ class Token:
         self.token_type = token_type
         self.value = value
         self.position = position
+        self.second_value = value
 
     def __repr__(self):
 
         if self.token_type == TokenType.whitespace:
             string = f'{self.token_type}: {ord(self.value)}'
         else:
-            string = f'{self.token_type}, {self.value}'
+            string = f'{self.token_type}, {self.value} -> {self.second_value}'
 
         if self.position is not None:
             string += f'\tposition: {self.position.row}:{self.position.column}'

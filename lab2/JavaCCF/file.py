@@ -12,3 +12,8 @@ class File:
 
     def __str__(self):
         return repr(self)
+
+    def print_file(self):
+        file = open(self.filename, mode="w", encoding='utf-8')
+        for token in self.tokens:
+            file.write(token.second_value)

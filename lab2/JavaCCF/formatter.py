@@ -12,9 +12,15 @@ def get_files(path):
     return list(Path(path).glob("*.[jJ][aA][vV][aA]"))
 
 
+def print_files(files):
+    for file in files:
+        file.print_file()
+
+
 def format_files(files):
     formatter = Formatter(files)
     formatter.format_files()
+    print_files(files)
 
 
 class_interface_enum = ('class', 'interface', 'enum')
@@ -193,6 +199,9 @@ class Formatter:
                             self.replace_to_upper_case(token)
                         else:
                             self.replace_to_camel_case_first_down(token)
+
+                elif len(stack) > 1 and next_token.value == '->':  # in lambda
+                    self.replace_to_camel_case_first_down(token)
 
                 elif len(stack) > 2 and stack[-2] == '{' and stack[-1] in ('(', '{'):  # in method
                     if stack[-1] == '(':

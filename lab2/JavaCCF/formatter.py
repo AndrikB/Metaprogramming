@@ -95,7 +95,7 @@ class Formatter:
         return re.search('^[A-Z][a-zA-Z0-9]*$', token.second_value)
 
     def replace_to_camel_case_first_up(self, token):
-        if Formatter.is_camel_case_first_up(token):
+        if Formatter.is_camel_case_first_up(token) or token.token_type != TokenType.identifier:
             return
 
         Formatter.replace_underscore_to_uppercase(token)
@@ -111,7 +111,7 @@ class Formatter:
         return re.search('^[a-z][a-zA-Z0-9]*$', token.second_value)
 
     def replace_to_camel_case_first_down(self, token):
-        if Formatter.is_camel_case_first_down(token):
+        if Formatter.is_camel_case_first_down(token) or token.token_type != TokenType.identifier:
             return
 
         Formatter.replace_underscore_to_uppercase(token)
@@ -127,7 +127,7 @@ class Formatter:
         return re.search('^([A-Z0-9]*_*)*$', token.second_value)
 
     def replace_to_upper_case(self, token):
-        if Formatter.is_upper_case(token):
+        if Formatter.is_upper_case(token) or token.token_type != TokenType.identifier:
             return
 
         token.second_value = Formatter.to_lower(token.second_value, 0)
@@ -149,13 +149,21 @@ class Formatter:
 
         self.replace_all_tokens_like_this(token)
 
+    @staticmethod
+    def is_method_return(token):
+        if token.token_type == TokenType.identifier:
+            return True
+        return token.value in ('void', 'byte', 'int', 'boolean', 'char', 'long', 'short')
+
     # fix
     def fix_names(self, file):
         stack = []
-        for i in range(len(file.tokens)):
+        i = 0
+        while i < len(file.tokens):
             token = file.tokens[i]
 
-            if token.value in class_interface_enum:
+            if token.value in class_interface_enum and \
+                    file.tokens[Formatter.get_next_no_whitespace_token_id(file, i)].token_type == TokenType.identifier:
                 stack.append(token.value)
                 class_id = self.get_next_no_whitespace_token_id(file, i)
                 self.replace_to_camel_case_first_up(file.tokens[class_id])
@@ -190,7 +198,7 @@ class Formatter:
 
                 if len(stack) > 1 and stack[-2] in class_interface_enum and stack[-1] == '{':  # in class
 
-                    if next_token.value == '(':  # is method declaration
+                    if next_token.value == '(' and Formatter.is_method_return(prev_token):  # is method declaration
                         self.replace_to_camel_case_first_down(token)
                     elif next_token.value in (';', '='):  # is variable
                         end_of_search = Formatter.get_previous_token_id_with_such_value(file.tokens, i, ('{', '}', ';'))
@@ -209,10 +217,10 @@ class Formatter:
                     else:
                         after_tokens = (';', '=', ':')
 
-                    if (prev_token.value in ('>', ']',) or prev_token.token_type in (
-                            TokenType.identifier, TokenType.keyword)) and \
+                    if (prev_token.value in ('>', ']',) or Formatter.is_method_return(prev_token)) and \
                             next_token.value in after_tokens:
                         self.replace_to_camel_case_first_down(token)
+            i += 1
 
     @staticmethod
     def insert_new_line(file, index):
@@ -224,8 +232,27 @@ class Formatter:
             file.tokens.insert(index, Token(TokenType.whitespace, ' ', file.tokens[index + i].position))
 
     @staticmethod
-    def fix_documentation_comment(token):  # todo
-        pass
+    def fix_documentation_comment(token, indent):
+        i = 3
+        while i + 1 < len(token.second_value):
+            char = token.second_value[i]
+            next_char = token.second_value[i + 1]
+            if char == '\n':
+                second_part = token.second_value[i:]
+                local_i = 0
+                while second_part[local_i].isspace():
+                    local_i += 1
+                if second_part[local_i] == '*':
+                    local_i += 1
+                while second_part[local_i].isspace():
+                    local_i += 1
+
+                token.second_value = token.second_value[:i + 1] + ' ' * indent + ' *' + second_part[local_i:]
+            elif char == '*':
+                if next_char not in ('/', ' '):
+                    token.second_value = token.second_value[:i + 1] + ' ' + token.second_value[i + 1:]
+
+            i += 1
 
     @staticmethod
     def fix_beginning_comment(file):
@@ -266,7 +293,7 @@ class Formatter:
     def fix_comment_before_class_declaration(file, class_index):
         class_token = file.tokens[Formatter.get_next_no_whitespace_token_id(file, class_index)]
         class_name = class_token.second_value
-        class_type = file.tokens[class_index]
+        class_type = file.tokens[class_index].value
 
         first_token_of_statement_id = Formatter.get_first_token_id_of_statement(file, class_index)
         first_token_of_statement = file.tokens[first_token_of_statement_id]
@@ -282,7 +309,7 @@ class Formatter:
                 previous_token.second_value = '/**\n' + ' ' * indent + f' * The {class_name} {class_type} provides ' + \
                                               new_line + previous_token.second_value[3:]
 
-            Formatter.fix_documentation_comment(previous_token)
+            Formatter.fix_documentation_comment(previous_token, indent)
         else:  # create
             token = Token(TokenType.comment, '', first_token_of_statement.position)
             token.second_value = '/**\n' + ' ' * indent + f' * The {class_name} {class_type} provides \n' + ' ' \
@@ -292,9 +319,154 @@ class Formatter:
             Formatter.insert_new_line(file, first_token_of_statement_id + 1)
             Formatter.add_indents(file, first_token_of_statement_id + 2, indent)
 
+        while file.tokens[class_index].value != class_type:
+            class_index += 1
+        return class_index
+
     @staticmethod
     def fix_comment_before_method_declaration(file, method_name_index):
-        pass
+        i = method_name_index
+
+        def get_method_params():
+            local_method_params = []
+            nonlocal i
+            i = Formatter.get_next_no_whitespace_token_id(file, i)
+            token = file.tokens[i]
+            local_previous_token = token
+
+            while local_previous_token.value != ')':
+
+                if token.value in (',', ')') and local_previous_token.token_type == TokenType.identifier:
+                    local_method_params.append((local_previous_token.value, local_previous_token.second_value))
+                elif token.value == '<':
+                    count_open = 1
+                    while count_open != 0:
+                        i += 1
+                        if file.tokens[i].value == '<':
+                            count_open += 1
+                        elif file.tokens[i].value == '>':
+                            count_open -= 1
+
+                i += 1
+                local_previous_token = token
+                token = file.tokens[i]
+
+            return local_method_params
+
+        def get_method_throws():
+            local_method_throws = []
+            nonlocal i
+            i = Formatter.get_next_no_whitespace_token_id(file, i)
+            token = file.tokens[i]
+            local_previous_token = token
+            if token.value == 'throws':
+
+                while local_previous_token.value not in (';', '{'):
+                    if token.value in (',', ';', '{'):
+                        local_method_throws.append((local_previous_token.value, local_previous_token.second_value))
+                    i += 1
+                    local_previous_token = token
+                    token = file.tokens[i]
+
+            return local_method_throws
+
+        method_params = get_method_params()
+        method_throws = get_method_throws()
+
+        first_token_of_statement_id = Formatter.get_first_token_id_of_statement(file, method_name_index)
+        first_token_of_statement = file.tokens[first_token_of_statement_id]
+        indent = first_token_of_statement.position.column - 1
+
+        previous_token = file.tokens[Formatter.get_prev_no_whitespace_token_id(file, first_token_of_statement_id)]
+        if previous_token.second_value[0:3] == '/**':  # validate
+
+            for param in method_params:
+                previous_token.second_value = previous_token.second_value.replace(param[0], param[1])
+            for exception in method_throws:
+                previous_token.second_value = previous_token.second_value.replace(exception[0], exception[1])
+
+            Formatter.fix_documentation_comment(previous_token, indent)
+
+        else:  # create
+            previous_token = Token(TokenType.comment, f'/**\n{" " * indent} */',
+                                   first_token_of_statement.position)
+            file.tokens.insert(first_token_of_statement_id, previous_token)
+            Formatter.insert_new_line(file, first_token_of_statement_id + 1)
+            Formatter.add_indents(file, first_token_of_statement_id + 2, indent)
+
+        separator = ' ' * indent + ' * @'
+        blocks = previous_token.second_value.split(separator)
+        for i in range(1, len(blocks)):
+            blocks[i] = separator + blocks[i]
+        end = ' ' * indent + ' */'
+        blocks[-1] = blocks[-1][:-len(end)]
+        blocks.append(end)
+        # sort
+        new_blocs = [blocks[0]]
+        blocks.pop(0)
+
+        def refactor_block_return_name(_block, _name):
+            _i = len(separator) + len(_name)
+            while _i < len(_block) and _block[_i].isspace():
+                _block = _block[:_i] + _block[_i + 1:]
+            _block = _block[:_i] + ' ' + _block[_i:]
+            next_space = _block.find(' ', _i + 1)
+            return _block, _block[_i + 1:next_space]
+
+        # @param
+        i = 0
+        while i < len(blocks):
+            if blocks[i].startswith(separator + 'param'):
+                block, name = refactor_block_return_name(blocks[i], 'param')
+                new_blocs.append(block)
+                blocks.pop(i)
+                i -= 1
+
+                for i in range(len(method_params)):
+                    if method_params[i][1] == name:
+                        method_params.pop(i)
+                        break
+
+            i += 1
+
+        for param_name in method_params:
+            new_blocs.append(separator + 'param ' + param_name[1] + '\n')
+
+        # @return
+        i = 0
+        current_block = separator + 'return\n'
+        while i < len(blocks):
+            if blocks[i].startswith(separator + 'return'):
+                current_block = blocks[i]
+                blocks.pop(i)
+                i -= 1
+            i += 1
+        new_blocs.append(current_block)
+
+        # @throws
+        i = 0
+        while i < len(blocks):
+            if blocks[i].startswith(separator + 'throws'):
+                block, name = refactor_block_return_name(blocks[i], 'throws')
+                new_blocs.append(block)
+                blocks.pop(i)
+                i -= 1
+
+                for i in range(len(method_throws)):
+                    if method_throws[i][1] == name:
+                        method_throws.pop(i)
+                        break
+            i += 1
+
+        for param_name in method_throws:
+            new_blocs.append(separator + 'throws ' + param_name[1] + '\n')
+
+        # other
+        for block in blocks:
+            new_blocs.append(block)
+
+        previous_token.second_value = ''.join(new_blocs)
+        Formatter.fix_documentation_comment(previous_token, indent)
 
     @staticmethod
     def fix_comment_before_field(file, field_name_id):
@@ -313,7 +485,7 @@ class Formatter:
                 previous_token.second_value = '/**\n' + ' ' * indent + f' * The {field_name} documentation comment ' + \
                                               new_line + previous_token.second_value[3:]
 
-            Formatter.fix_documentation_comment(previous_token)
+            Formatter.fix_documentation_comment(previous_token, indent)
         else:  # create
             token = Token(TokenType.comment, '', first_token_of_statement.position)
             token.second_value = '/**\n' + ' ' * indent + f' * The {field_name} documentation comment \n' + ' ' \
@@ -330,9 +502,10 @@ class Formatter:
         while i < len(file.tokens):
             token = file.tokens[i]
             next_token = file.tokens[Formatter.get_next_no_whitespace_token_id(file, i)]
+            prev_token = file.tokens[Formatter.get_prev_no_whitespace_token_id(file, i)]
             if token.value in class_interface_enum and next_token.token_type == TokenType.identifier:
                 stack.append(token.value)
-                Formatter.fix_comment_before_class_declaration(file, i)
+                i = Formatter.fix_comment_before_class_declaration(file, i)
 
             elif token.value == '{':
                 stack.append(token.value)
@@ -348,7 +521,7 @@ class Formatter:
             if len(stack) > 1 and stack[-2] in class_interface_enum and stack[-1] == '{':  # in class
                 if token.token_type == TokenType.identifier:  # identifier (method name or value)
 
-                    if next_token.token_type == '(':  # method declaration
+                    if next_token.value == '(' and Formatter.is_method_return(prev_token):  # method declaration
                         Formatter.fix_comment_before_method_declaration(file, i)
                     elif next_token.value in (';', '='):  # is variable
                         Formatter.fix_comment_before_field(file, i)
@@ -362,5 +535,6 @@ class Formatter:
 
     def format_files(self):
         for file in self.files:
+            print(file)
             self.fix_names(file)
             Formatter.fix_comments(file)

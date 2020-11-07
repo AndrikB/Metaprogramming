@@ -224,6 +224,10 @@ class Formatter:
             file.tokens.insert(index, Token(TokenType.whitespace, ' ', file.tokens[index + i].position))
 
     @staticmethod
+    def fix_documentation_comment(token):  # todo
+        pass
+
+    @staticmethod
     def fix_beginning_comment(file):
         first_token = file.tokens[Formatter.get_next_no_whitespace_token_id(file, -1)]
         if first_token.value[0:2] != '/*':
@@ -268,17 +272,20 @@ class Formatter:
         indent = first_token_of_statement.position.column - 1
 
         previous_token = file.tokens[Formatter.get_prev_no_whitespace_token_id(file, first_token_of_statement_id)]
-        if previous_token.second_value[0:3] == '/**':
-            was_new_line = previous_token.second_value[3] == '\n'  # TODO add for all
+
+        if previous_token.second_value[0:3] == '/**':  # validate
+
             if class_name not in previous_token.second_value:
-                new_line = '' if was_new_line else '\n'
+                new_line = '' if previous_token.second_value[3] == '\n' else '\n'
                 previous_token.second_value = '/**\n' + ' ' * indent + f' * The {class_name} {class_type} provides ' + \
                                               new_line + previous_token.second_value[3:]
-            # TODO add fix end of token for all
-        else:
+
+            Formatter.fix_documentation_comment(previous_token)
+        else:  # create
             token = Token(TokenType.comment, '', first_token_of_statement.position)
             token.second_value = '/**\n' + ' ' * indent + f' * The {class_name} {class_type} provides \n' + ' ' \
                                  * indent + ' */'
+
             file.tokens.insert(first_token_of_statement_id, token)
             Formatter.insert_new_line(file, first_token_of_statement_id + 1)
             Formatter.add_indents(file, first_token_of_statement_id + 2, indent)
@@ -289,13 +296,28 @@ class Formatter:
 
     @staticmethod
     def fix_comment_before_field(file, field_name_id):
-        field_name = file.tokens[field_name_id]
+        field_name = file.tokens[field_name_id].second_value
         first_token_of_statement_id = Formatter.get_first_token_id_of_statement(file, field_name_id)
         first_token_of_statement = file.tokens[first_token_of_statement_id]
         indent = first_token_of_statement.position.column - 1
 
         previous_token = file.tokens[Formatter.get_prev_no_whitespace_token_id(file, first_token_of_statement_id)]
-        pass
+        if previous_token.second_value[0:3] == '/**':  # validate
+
+            if field_name not in previous_token.second_value:
+                new_line = '' if previous_token.second_value[3] == '\n' else '\n'
+                previous_token.second_value = '/**\n' + ' ' * indent + f' * The {field_name} documentation comment ' + \
+                                              new_line + previous_token.second_value[3:]
+
+            Formatter.fix_documentation_comment(previous_token)
+        else:  # create
+            token = Token(TokenType.comment, '', first_token_of_statement.position)
+            token.second_value = '/**\n' + ' ' * indent + f' * The {field_name} documentation comment \n' + ' ' \
+                                 * indent + ' */'
+
+            file.tokens.insert(first_token_of_statement_id, token)
+            Formatter.insert_new_line(file, first_token_of_statement_id + 1)
+            Formatter.add_indents(file, first_token_of_statement_id + 2, indent)
 
     @staticmethod
     def fix_another_comments(file):

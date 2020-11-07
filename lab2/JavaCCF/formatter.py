@@ -264,7 +264,8 @@ class Formatter:
 
     @staticmethod
     def fix_comment_before_class_declaration(file, class_index):
-        class_name = file.tokens[Formatter.get_next_no_whitespace_token_id(file, class_index)].second_value
+        class_token = file.tokens[Formatter.get_next_no_whitespace_token_id(file, class_index)]
+        class_name = class_token.second_value
         class_type = file.tokens[class_index]
 
         first_token_of_statement_id = Formatter.get_first_token_id_of_statement(file, class_index)
@@ -275,6 +276,7 @@ class Formatter:
 
         if previous_token.second_value[0:3] == '/**':  # validate
 
+            previous_token.second_value = previous_token.second_value.replace(class_token.value, class_name)
             if class_name not in previous_token.second_value:
                 new_line = '' if previous_token.second_value[3] == '\n' else '\n'
                 previous_token.second_value = '/**\n' + ' ' * indent + f' * The {class_name} {class_type} provides ' + \
@@ -296,7 +298,8 @@ class Formatter:
 
     @staticmethod
     def fix_comment_before_field(file, field_name_id):
-        field_name = file.tokens[field_name_id].second_value
+        field_token = file.tokens[field_name_id]
+        field_name = field_token.second_value
         first_token_of_statement_id = Formatter.get_first_token_id_of_statement(file, field_name_id)
         first_token_of_statement = file.tokens[first_token_of_statement_id]
         indent = first_token_of_statement.position.column - 1
@@ -304,6 +307,7 @@ class Formatter:
         previous_token = file.tokens[Formatter.get_prev_no_whitespace_token_id(file, first_token_of_statement_id)]
         if previous_token.second_value[0:3] == '/**':  # validate
 
+            previous_token.second_value = previous_token.second_value.replace(field_token.value, field_name)
             if field_name not in previous_token.second_value:
                 new_line = '' if previous_token.second_value[3] == '\n' else '\n'
                 previous_token.second_value = '/**\n' + ' ' * indent + f' * The {field_name} documentation comment ' + \

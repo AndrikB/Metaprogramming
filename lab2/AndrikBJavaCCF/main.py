@@ -1,7 +1,7 @@
 import sys
 
 from .file import File
-from .formatter import format_files, get_files, get_files_rec
+from .formatter import get_files, get_files_rec, fix, validate
 
 __version__ = "0.1.1"
 
@@ -53,4 +53,7 @@ def main():
             for i in range(len(files)):
                 files[i] = File(files[i])
 
-            format_files(files)
+            if mode == '-v':
+                validate(files)
+            else:
+                fix(files)

@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+import logging
 
 from .lexer import TokenType, Token, Position
 
@@ -16,10 +17,27 @@ def print_files(files):
     for file in files:
         file.print_file()
 
-
 def format_files(files):
     formatter = Formatter(files)
     formatter.format_files()
+
+def validate(files):
+    format_files(files)
+    logging.basicConfig(filename='verification.log', level=logging.WARN)
+    for file in files:
+        for token in file.tokens:
+            if token.value != token.second_value and token.token_type in (TokenType.comment, TokenType.identifier):
+                logging.warn(f'{file.filename}\t {token.position.row}:{token.position.column}\t -> '
+                             f'expected {token.second_value}, actual {token.value}')
+
+def fix(files):
+    format_files(files)
+    logging.basicConfig(filename='fixing.log', level=logging.WARN)
+    for file in files:
+        for token in file.tokens:
+            if token.value != token.second_value and token.token_type in (TokenType.comment, TokenType.identifier):
+                logging.warn(f'{file.filename}\t {token.position.row}:{token.position.column}\t replace '
+                             f'{token.value} -> {token.value}')
     print_files(files)
 
 

@@ -1,4 +1,4 @@
-from lexer import tokenize_file
+from .lexer import tokenize_file
 
 
 class File:

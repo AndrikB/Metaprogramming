@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from lexer import TokenType, Token, Position
+from .lexer import TokenType, Token, Position
 
 
 def get_files_rec(path):

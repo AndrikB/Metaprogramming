@@ -3,7 +3,7 @@ import sys
 from .file import File
 from .formatter import get_files, get_files_rec, fix, validate
 
-__version__ = "0.2"
+__version__ = "0.2.1"
 
 
 def print_help():

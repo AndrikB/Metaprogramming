@@ -1,7 +1,7 @@
 import logging
 import re
 from os import chdir, listdir, rename
-from os.path import dirname
+from os.path import dirname, abspath
 from pathlib import Path
 
 from .lexer import TokenType, Token, Position
@@ -37,7 +37,7 @@ def validate(files):
 
 def rename_dirs(files):
     for file in files:
-        chdir(dirname(file.filename))
+        chdir(dirname(abspath(file.filename)))
         for package in file.packages:
             chdir('..')
             if package[0] in listdir():
@@ -401,7 +401,7 @@ class Formatter:
                 if token.value in (',', ')') and local_previous_token.token_type == TokenType.identifier:
                     local_method_params.append((local_previous_token.value, local_previous_token.second_value))
                 elif token.value == '[' and local_previous_token.token_type == TokenType.identifier and \
-                        file.tokens[i + 2].value == ',':
+                        file.tokens[i + 2].value in (',', ')'):
                     local_method_params.append((local_previous_token.value, local_previous_token.second_value))
                 elif token.value == '<':
                     count_open = 1

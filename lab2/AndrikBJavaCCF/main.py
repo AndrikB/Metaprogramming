@@ -10,12 +10,12 @@ def print_help():
     print(
         """
 ***************** examples *****************
-name --verify -(p|d|f) /..
-name -v -(p|d|f) /..
-name --fix -(p|d|f) /..
-name -f  -(p|d|f) /..
-name --help
-name -h
+AndrikBJavaCCF --verify -(p|d|f) /..
+AndrikBJavaCCF -v -(p|d|f) /..
+AndrikBJavaCCF --fix -(p|d|f) /..
+AndrikBJavaCCF -f  -(p|d|f) /..
+AndrikBJavaCCF --help
+AndrikBJavaCCF -h
 where :
 -p - project
 -d - directory

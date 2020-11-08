@@ -11,7 +11,7 @@ class File:
         return self.filename
 
     def __str__(self):
-        return repr(self)
+        return str(self.filename)
 
     def print_file(self):
         file = open(self.filename, mode="w", encoding='utf-8')

@@ -10,6 +10,7 @@ class File:
         self.filename = filename
         self.tokens = tokenize_file(filename)
         self.new_filename = basename(filename)
+        self.packages = []
 
     def __repr__(self):
         return self.filename
@@ -19,8 +20,8 @@ class File:
 
     def print_file(self):
         remove(self.filename)
-        print(dirname(self.filename))
-        print(self.new_filename)
-        file = open(join(dirname(self.filename), self.new_filename), mode="w", encoding='utf-8')
+        self.filename = join(dirname(self.filename), self.new_filename)
+        file = open(self.filename, mode="w", encoding='utf-8')
         for token in self.tokens:
             file.write(token.second_value)
+        file.close()

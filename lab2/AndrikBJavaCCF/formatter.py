@@ -1,5 +1,7 @@
 import logging
 import re
+from os import chdir, listdir, rename
+from os.path import dirname
 from pathlib import Path
 
 from .lexer import TokenType, Token, Position
@@ -34,7 +36,15 @@ def validate(files):
 
 
 def rename_dirs(files):
-    pass
+    for file in files:
+        chdir(dirname(file.filename))
+        for package in file.packages:
+            chdir('..')
+            if package[0] in listdir():
+                if package[0] != package[1]:
+                    rename(package[0], package[1])
+            else:
+                break
 
 
 def fix(files):
@@ -196,12 +206,25 @@ class Formatter:
             return True
         return token.value in ('void', 'byte', 'int', 'boolean', 'char', 'long', 'short')
 
+
+    def replace_to_snake_case(self, token):
+        self.replace_to_upper_case(token)
+        token.second_value = token.second_value.lower()
+
     # fix
     def fix_names(self, file):
         stack = []
         i = 0
         while i < len(file.tokens):
             token = file.tokens[i]
+
+            if token.value == 'package':
+                while token.value != ';':
+                    i += 1
+                    token = file.tokens[i]
+                    if token.token_type == TokenType.identifier:
+                        self.replace_to_snake_case(token)
+                        file.packages.insert(0, (token.value, token.second_value))
 
             if token.value in class_interface_enum and \
                     file.tokens[Formatter.get_next_no_whitespace_token_id(file, i)].token_type == TokenType.identifier:

@@ -40,7 +40,7 @@ def fix(files):
         for token in file.tokens:
             if token.value != token.second_value and token.token_type in (TokenType.comment, TokenType.identifier):
                 logging.warn(f'{file.filename}\t {token.position.row}:{token.position.column}\t replace '
-                             f'{token.value} -> {token.value}')
+                             f'{token.value} -> {token.second_value}')
     print_files(files)
 
 
@@ -261,7 +261,7 @@ class Formatter:
     @staticmethod
     def fix_documentation_comment(token, indent):
         i = 3
-        while i + 1 < len(token.second_value):
+        while i + 2 < len(token.second_value):
             char = token.second_value[i]
             next_char = token.second_value[i + 1]
             if char == '\n':
@@ -276,8 +276,7 @@ class Formatter:
 
                 token.second_value = token.second_value[:i + 1] + ' ' * indent + ' *' + second_part[local_i:]
             elif char == '*':
-                if next_char not in ('/', ' '):
-                    token.second_value = token.second_value[:i + 1] + ' ' + token.second_value[i + 1:]
+                token.second_value = token.second_value[:i + 1] + ' ' + token.second_value[i + 1:]
 
             i += 1
 
@@ -394,7 +393,7 @@ class Formatter:
                 while local_previous_token.value not in (';', '{'):
                     if token.value in (',', ';', '{'):
                         local_method_throws.append((local_previous_token.value, local_previous_token.second_value))
-                    i += 1
+                    i = Formatter.get_next_no_whitespace_token_id(file, i)
                     local_previous_token = token
                     token = file.tokens[i]
 
@@ -441,7 +440,7 @@ class Formatter:
                 _block = _block[:_i] + _block[_i + 1:]
             _block = _block[:_i] + ' ' + _block[_i:]
             next_space = _block.find(' ', _i + 1)
-            return _block, _block[_i + 1:next_space]
+            return _block, _block[_i + 1:next_space].split()[0]
 
         # @param
         i = 0

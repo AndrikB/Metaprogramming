@@ -33,6 +33,10 @@ def validate(files):
                              f'expected {token.second_value}, actual {token.value}')
 
 
+def rename_dirs(files):
+    pass
+
+
 def fix(files):
     format_files(files)
     logging.basicConfig(filename='fixing.log', level=logging.WARN)
@@ -42,6 +46,7 @@ def fix(files):
                 logging.warn(f'{file.filename}\t {token.position.row}:{token.position.column}\t replace '
                              f'{token.value} -> {token.second_value}')
     print_files(files)
+    rename_dirs(files)
 
 
 class_interface_enum = ('class', 'interface', 'enum', '@interface')
@@ -77,7 +82,6 @@ class Formatter:
         return -1
 
     def replace_all_tokens_like_this(self, token):
-        print(token)
         for file in self.files:
             for file_token in file.tokens:
                 if file_token.value == token.value:
@@ -129,6 +133,16 @@ class Formatter:
             print(f'wtf in token camel_case_first_up: {token}')
 
         self.replace_all_tokens_like_this(token)
+
+    @staticmethod
+    def fix_filename(file):
+        filename = Token(TokenType.identifier, file.new_filename)
+
+        if Formatter.is_upper_case(filename):
+            file.new_filename = file.new_filename.lower()
+
+        Formatter.replace_underscore_to_uppercase(filename)
+        file.new_filename = Formatter.to_upper(filename.second_value, 0)
 
     @staticmethod
     def is_camel_case_first_down(token):
@@ -263,7 +277,6 @@ class Formatter:
         i = 3
         while i + 2 < len(token.second_value):
             char = token.second_value[i]
-            next_char = token.second_value[i + 1]
             if char == '\n':
                 second_part = token.second_value[i:]
                 local_i = 0
@@ -567,3 +580,4 @@ class Formatter:
             print(file)
             self.fix_names(file)
             Formatter.fix_comments(file)
+            Formatter.fix_filename(file)

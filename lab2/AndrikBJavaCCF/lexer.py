@@ -47,7 +47,7 @@ class Token:
 
 
 class Lexer:
-    keywords = ("abstract", "assert",
+    keywords = ("abstract", "assert", "null",
                 "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue",
                 "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for",
                 "if", "goto", "implements", "import", "instanceof", "int", "interface", "long",

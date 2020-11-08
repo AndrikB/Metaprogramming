@@ -210,6 +210,7 @@ class Formatter:
     def replace_to_snake_case(self, token):
         self.replace_to_upper_case(token)
         token.second_value = token.second_value.lower()
+        self.replace_all_tokens_like_this(token)
 
     # fix
     def fix_names(self, file):
@@ -297,22 +298,34 @@ class Formatter:
 
     @staticmethod
     def fix_documentation_comment(token, indent):
+        token.second_value = token.second_value[3:]
+        token.second_value = token.second_value[:-2]
+        while token.second_value[0].isspace():
+            token.second_value = token.second_value[1:]
+        while token.second_value[-1].isspace():
+            token.second_value = token.second_value[:-1]
+        token.second_value = '/**\n' + token.second_value + '\n*/'
+
+
         i = 3
+        was_newline = False
         while i + 2 < len(token.second_value):
             char = token.second_value[i]
             if char == '\n':
+                was_newline = True
                 second_part = token.second_value[i:]
                 local_i = 0
                 while second_part[local_i].isspace():
                     local_i += 1
                 if second_part[local_i] == '*':
                     local_i += 1
-                while second_part[local_i].isspace():
+                while second_part[local_i]== ' ':
                     local_i += 1
 
                 token.second_value = token.second_value[:i + 1] + ' ' * indent + ' *' + second_part[local_i:]
-            elif char == '*':
+            elif char == '*' and was_newline:
                 token.second_value = token.second_value[:i + 1] + ' ' + token.second_value[i + 1:]
+                was_newline = False
 
             i += 1
 
@@ -464,7 +477,11 @@ class Formatter:
         for i in range(1, len(blocks)):
             blocks[i] = separator + blocks[i]
         end = ' ' * indent + ' */'
-        blocks[-1] = blocks[-1][:-len(end)]
+        if blocks[-1].endswith(end):
+            blocks[-1] = blocks[-1][:-len(end)]
+        else:
+            blocks[-1] = blocks[-1][:-2]
+
         blocks.append(end)
         # sort
         new_blocs = [blocks[0]]

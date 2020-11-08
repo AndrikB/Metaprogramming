@@ -1,6 +1,6 @@
+import logging
 import re
 from pathlib import Path
-import logging
 
 from .lexer import TokenType, Token, Position
 
@@ -17,9 +17,11 @@ def print_files(files):
     for file in files:
         file.print_file()
 
+
 def format_files(files):
     formatter = Formatter(files)
     formatter.format_files()
+
 
 def validate(files):
     format_files(files)
@@ -29,6 +31,7 @@ def validate(files):
             if token.value != token.second_value and token.token_type in (TokenType.comment, TokenType.identifier):
                 logging.warn(f'{file.filename}\t {token.position.row}:{token.position.column}\t -> '
                              f'expected {token.second_value}, actual {token.value}')
+
 
 def fix(files):
     format_files(files)
@@ -116,6 +119,9 @@ class Formatter:
         if Formatter.is_camel_case_first_up(token) or token.token_type != TokenType.identifier:
             return
 
+        if Formatter.is_upper_case(token):
+            token.second_value = token.second_value.lower()
+
         Formatter.replace_underscore_to_uppercase(token)
         token.second_value = Formatter.to_upper(token.second_value, 0)
 
@@ -131,6 +137,9 @@ class Formatter:
     def replace_to_camel_case_first_down(self, token):
         if Formatter.is_camel_case_first_down(token) or token.token_type != TokenType.identifier:
             return
+
+        if Formatter.is_upper_case(token):
+            token.second_value = token.second_value.lower()
 
         Formatter.replace_underscore_to_uppercase(token)
         token.second_value = Formatter.to_lower(token.second_value, 0)
@@ -231,7 +240,7 @@ class Formatter:
 
                 elif len(stack) > 2 and stack[-2] == '{' and stack[-1] in ('(', '{'):  # in method
                     if stack[-1] == '(':
-                        after_tokens = (')', ',')
+                        after_tokens = (')', ',', '[')
                     else:
                         after_tokens = (';', '=', ':')
 
@@ -356,6 +365,9 @@ class Formatter:
 
                 if token.value in (',', ')') and local_previous_token.token_type == TokenType.identifier:
                     local_method_params.append((local_previous_token.value, local_previous_token.second_value))
+                elif token.value == '[' and local_previous_token.token_type == TokenType.identifier and \
+                        file.tokens[i + 2].value == ',':
+                    local_method_params.append((local_previous_token.value, local_previous_token.second_value))
                 elif token.value == '<':
                     count_open = 1
                     while count_open != 0:
@@ -440,9 +452,9 @@ class Formatter:
                 blocks.pop(i)
                 i -= 1
 
-                for i in range(len(method_params)):
-                    if method_params[i][1] == name:
-                        method_params.pop(i)
+                for _i in range(len(method_params)):
+                    if method_params[_i][1] == name:
+                        method_params.pop(_i)
                         break
 
             i += 1
@@ -470,9 +482,9 @@ class Formatter:
                 blocks.pop(i)
                 i -= 1
 
-                for i in range(len(method_throws)):
-                    if method_throws[i][1] == name:
-                        method_throws.pop(i)
+                for _i in range(len(method_throws)):
+                    if method_throws[_i][1] == name:
+                        method_throws.pop(_i)
                         break
             i += 1
 

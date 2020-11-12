@@ -123,6 +123,7 @@ class Formatter:
             if token.second_value[i] == '_':
                 token.second_value = token.second_value.replace('_', '', 1)
                 token.second_value = Formatter.to_upper(token.second_value, i)
+                i -= 1
             i += 1
 
     @staticmethod
